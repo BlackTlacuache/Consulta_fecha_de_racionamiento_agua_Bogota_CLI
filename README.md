@@ -1,9 +1,9 @@
 # Aplicación CLI de consulta de fechas de racionamiento de agua
 para usarla deberá descargar el binario publicado.
 
-luego cambiarle los permisos con chmod +x ./\<Nombre del binario\>, así le damos la posibilidad de ser ejecutado.
+Luego cambiarle los permisos con chmod +x ./\<Nombre del binario\>, así le damos la posibilidad de ser ejecutado.
 
-por último ejecutar el binario y seguir las instrucciones en pantalla.
+Por último ejecutar el binario y seguir las instrucciones en pantalla.
 
 
 # Racionamiento de Agua en Bogotá D.C.
