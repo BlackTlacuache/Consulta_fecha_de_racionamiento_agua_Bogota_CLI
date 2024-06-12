@@ -1,7 +1,7 @@
 # Aplicación CLI de consulta de fechas de racionamiento de agua
 para usarla deberá descargar el binario publicado.
 
-luego cambiarle los permisos con chmod +x ./<Nombre del binario>
+luego cambiarle los permisos con chmod +x ./\<Nombre del binario\>
 
 por último ejecutar el binario y seguir las instrucciones en pantalla.
 
