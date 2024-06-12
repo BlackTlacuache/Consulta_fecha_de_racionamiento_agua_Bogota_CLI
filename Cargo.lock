@@ -3,16 +3,6 @@
 version = 3
 
 [[package]]
-name = "Consulta_fecha_de_racionamiento_agua_Bogotá_CLI"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "reqwest",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -123,6 +113,16 @@ dependencies = [
  "num-traits",
  "wasm-bindgen",
  "windows-targets 0.52.5",
+]
+
+[[package]]
+name = "consulta_fecha_de_racionamiento_agua_Bogotá_CLI"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "reqwest",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
