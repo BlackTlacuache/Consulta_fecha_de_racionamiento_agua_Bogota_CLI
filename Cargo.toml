@@ -1,0 +1,12 @@
+[package]
+name = "Consulta_fecha_de_racionamiento_agua_Bogotá_CLI"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.38"
+reqwest = { version = "0.12", features = ["json"] }
+scraper = "0.19.0"
+serde = "1.0.203"
+serde_json = "1.0.117"
+tokio = { version = "1", features = ["full"] }
