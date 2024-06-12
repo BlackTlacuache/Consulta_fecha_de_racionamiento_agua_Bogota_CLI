@@ -116,7 +116,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "consulta_fecha_de_racionamiento_agua_Bogotá_CLI"
+name = "consulta_fecha_de_racionamiento_agua_bogotá_cli"
 version = "0.1.0"
 dependencies = [
  "chrono",
