@@ -116,16 +116,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "consulta_fecha_de_racionamiento_agua_bogotá_cli"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "reqwest",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -813,6 +803,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fa76aaf39101c457836aec0ce2316dbdc3ab723cdda1c6bd4e6ad4208acaca7"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "racionamiento"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "reqwest",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

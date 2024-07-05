@@ -1,5 +1,5 @@
 [package]
-name = "consulta_fecha_de_racionamiento_agua_bogotá_cli"
+name = "racionamiento"
 version = "0.1.0"
 edition = "2021"
 

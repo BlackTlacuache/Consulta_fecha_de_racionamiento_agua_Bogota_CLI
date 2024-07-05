@@ -1,10 +1,19 @@
 use chrono::{DateTime, NaiveDate};
 use reqwest::get;
 use serde_json::Value;
-use std::io;
+use std::{borrow::Borrow, collections::HashMap, io};
+
+#[derive(Debug)]
+struct Sector {
+    localidad: String,
+    fecha: NaiveDate,
+    delimitacion: String,
+}
+
+
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>>{
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Consultando en la página https://datosabiertos.bogota.gov.co/dataset/racionamiento-agua-bogota-d-c");
 
     let fechas_actualizadas = get(r#"https://services1.arcgis.com/J5ltM0ovtzXUbp7B/ArcGIS/rest/services/EsquemaRestriccion/FeatureServer/0/query?returnGeometry=true&where=1=1&outSr=4326&outFields=*&inSr=4326&geometry={"xmin":-74.53125,"ymin":4.214943141390651,"xmax":-73.125,"ymax":5.61598581915534,"spatialReference":{"wkid":4326}}&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&geometryPrecision=6&f=geojson"#)
@@ -16,57 +25,86 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     let fechas_actualizadas: Value = serde_json::from_str(&fechas_actualizadas).unwrap();
     let fechas_actualizadas: &Value = fechas_actualizadas.get("features").unwrap();
-    let fechas_actualizadas: &Vec<Value> = fechas_actualizadas.as_array().unwrap();
+    let fechas_actualizadas = fechas_actualizadas.as_array().unwrap().into_iter();
 
-    let mut localidades: Vec<Vec<&str>> = vec![];
-    let mut fechas: Vec<NaiveDate> = vec![];
+    let mut datos: HashMap<String, Sector> = HashMap::new();
+    let mut cont = 1;
     for valor in fechas_actualizadas {
-        let mut vec_localidades: Vec<Vec<&str>> = vec![valor.as_object().unwrap()["properties"].as_object().unwrap()["LOCALIDADE"].as_str().unwrap().split(", ").collect()];
+        let vec_localidades: Vec<&str> = valor.as_object().unwrap()["properties"]
+            .as_object()
+            .unwrap()["LOCALIDADE"]
+            .as_str()
+            .unwrap()
+            .split(", ")
+            .collect();
 
-        localidades.append(&mut vec_localidades);
+        let fecha = de_numero_a_fecha(
+            valor.as_object().unwrap()["properties"]
+                .as_object()
+                .unwrap()["FECHA_INI"]
+                .as_i64()
+                .unwrap_or(0),
+        );
 
-        let mut vec_fechas = vec![de_numero_a_fecha(valor.as_object().unwrap()["properties"].as_object().unwrap()["FECHA_INI"].as_i64().unwrap_or(0))];
+        let sector = valor.as_object().unwrap()["properties"]
+        .as_object()
+        .unwrap()["SECTOR"]
+        .as_str()
+        .unwrap();
 
-        fechas.append(&mut vec_fechas);
+        
+        for localidad in vec_localidades {
+            let loc =  cont.to_string();
 
-    };
-    let mut contador = 1;
-    println!("Seleccione un conjunto donde esté la localidad a consultar: \n");
-    for i in localidades {
-        if contador > 8 {
-            break
+            let junte = Sector{
+                localidad: localidad.to_string(),
+                fecha: fecha,
+                delimitacion: sector.to_string(),
+            };
+            datos.insert(loc, junte);
+            cont += 1;
         }
-        println!("{contador}. {:?}", i);
-        contador += 1;
     }
-    
-    let seleccion = loop {
-        let mut seleccion = String::new();
+    let caracteres_a_eliminar = ['"'];
+    let opcion = loop {
+        for (sector, junte) in datos.borrow() {
+            // Quitamos las comillas de cada palabra
+            let localidad: String = junte.localidad.chars()
+            .filter(|c| !caracteres_a_eliminar.contains(c))
+            .collect();
+
+            println!("sector #{sector} {localidad}")
+        }
+        println!("\nSeleccione un sector con un número entre 1 y {:?}:", datos.len());
+        let mut opcion = String::new();
 
         io::stdin()
-            .read_line(&mut seleccion)
+            .read_line(&mut opcion)
             .expect("Fallo al leer la línea");
 
-        let seleccion: usize = match seleccion
+        let opcion: u32 = match opcion
             .trim()
             .parse() {
                 Ok(num) => num,
                 Err(_) => continue
             };
 
-        if seleccion > 8 {
-            println!("Sólo hay 8 opciones!");
-            continue;
-        } else {
-            break seleccion - 1;
+        if opcion < datos.len() as u32 + 1 {
+            break opcion;
         }
     };
     
-    println!("La fecha de corte de agua en tu localidad es: {:?}", fechas[seleccion]);
+    let desempaque = datos.get(&opcion.to_string()).unwrap();
+    println!("En la localidad de {} el racionamiento es en la fecha {}\nLa delimitación exacta es:\n\n--> {}", desempaque.localidad, desempaque.fecha, desempaque.delimitacion);
+
+
     Ok(())
 }
 
 fn de_numero_a_fecha(numero: i64) -> NaiveDate {
-    let fecha = DateTime::from_timestamp_millis(numero).expect("invalid timestamp").to_utc().date_naive();
+    let fecha = DateTime::from_timestamp_millis(numero)
+        .expect("invalid timestamp")
+        .to_utc()
+        .date_naive();
     return fecha;
 }
