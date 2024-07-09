@@ -1,7 +1,8 @@
-use chrono::{DateTime, NaiveDate};
+use chrono::{DateTime, Datelike, NaiveDate};
 use reqwest::get;
 use serde_json::Value;
-use std::{borrow::Borrow, collections::HashMap, io};
+use std::{borrow::Borrow, io};
+use indexmap::IndexMap as HashMap;
 
 #[derive(Debug)]
 struct Sector {
@@ -10,17 +11,10 @@ struct Sector {
     delimitacion: String,
 }
 
-
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Consultando en la página https://datosabiertos.bogota.gov.co/dataset/racionamiento-agua-bogota-d-c");
 
-    let fechas_actualizadas = get(r#"https://services1.arcgis.com/J5ltM0ovtzXUbp7B/ArcGIS/rest/services/EsquemaRestriccion/FeatureServer/0/query?returnGeometry=true&where=1=1&outSr=4326&outFields=*&inSr=4326&geometry={"xmin":-74.53125,"ymin":4.214943141390651,"xmax":-73.125,"ymax":5.61598581915534,"spatialReference":{"wkid":4326}}&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&geometryPrecision=6&f=geojson"#)
-        .await?
-        .text()
-        .await?;
-
+    let fechas_actualizadas = obtener_datos().unwrap();
     println!("Listo \n======================================================= ");
 
     let fechas_actualizadas: Value = serde_json::from_str(&fechas_actualizadas).unwrap();
@@ -73,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .filter(|c| !caracteres_a_eliminar.contains(c))
             .collect();
 
-            println!("sector #{sector} {localidad}")
+            println!("sector #{sector} {localidad}");
         }
         println!("\nSeleccione un sector con un número entre 1 y {:?}:", datos.len());
         let mut opcion = String::new();
@@ -88,17 +82,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(num) => num,
                 Err(_) => continue
             };
-
         if opcion < datos.len() as u32 + 1 {
             break opcion;
         }
     };
     
     let desempaque = datos.get(&opcion.to_string()).unwrap();
-    println!("En la localidad de {} el racionamiento es en la fecha {}\nLa delimitación exacta es:\n\n--> {}", desempaque.localidad, desempaque.fecha, desempaque.delimitacion);
-
-
+    let dias = ["lunes", "martes", "miercoles", "jueves", "viernes", "sábado", "domingo"];
+    let meses = ["Enero", "Febrero", "Marzo","Abril","Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    println!("El próximo racionamiento en la localidad de {} es el {} {} de {} \n\nLa delimitación exacta es:\n\n--> {}", 
+        desempaque.localidad, 
+        dias[desempaque.fecha.weekday().num_days_from_monday() as usize], 
+        desempaque.fecha.day(),
+        meses[desempaque.fecha.month0() as usize],
+        desempaque.delimitacion
+    );
+    
     Ok(())
+}
+
+#[tokio::main]
+async fn obtener_datos() -> Result<String, Box<dyn std::error::Error>> {
+    let fechas_actualizadas = get(r#"https://services1.arcgis.com/J5ltM0ovtzXUbp7B/ArcGIS/rest/services/EsquemaRestriccion/FeatureServer/0/query?returnGeometry=true&where=1=1&outSr=4326&outFields=*&inSr=4326&geometry={"xmin":-74.53125,"ymin":4.214943141390651,"xmax":-73.125,"ymax":5.61598581915534,"spatialReference":{"wkid":4326}}&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&geometryPrecision=6&f=geojson"#)
+        .await?
+        .text()
+        .await?;
+    return  Ok(fechas_actualizadas);
 }
 
 fn de_numero_a_fecha(numero: i64) -> NaiveDate {
